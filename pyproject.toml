@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "analise-crises"
+version = "0.1.0"
+description = ""
+authors = ["Alexandre Augusto <alexandrebarbaruiva@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+jupyterlab = "^3.4.3"
+OSMPythonTools = "^0.3.5"
+numpy = "^1.23.0"
+matplotlib = "^3.5.2"
+Mesa = "^1.0.0"
+
+[tool.poetry.dev-dependencies]
+devtools = "^0.8.0"
+black = {extras = ["jupyter"], version = "^22.6.0"}
+pre-commit = "^2.19.0"
+ipdb = "^0.13.9"
+pytest = "^7.1.2"
+pytest-cov = "^3.0.0"
+bandit = "^1.7.4"
+isort = "^5.10.1"
+flake8 = "^4.0.1"
+flake8-bugbear = "^22.6.22"
+flake8-docstrings = "^1.6.0"
+docformatter = "^1.4"
+
+[tool.ipdb]
+context = 20
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
