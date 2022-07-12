@@ -37,7 +37,12 @@ def agents_portrayal(agent):
         portrayal["Color"] = BUILDING_COLOR
 
     if isinstance(agent, Tree):
-        portrayal["Shape"] = "resources/tree.png"
+        shape = {
+            "On Fire": "resources/tree-fire.png",
+            "Fine": "resources/tree.png",
+            "Burned Out": "resources/tree-burnt.png",
+        }
+        portrayal["Shape"] = shape[agent.condition]
         portrayal["w"] = 1
         portrayal["h"] = 1
         portrayal["r"] = 0.5
@@ -103,12 +108,20 @@ model_bar = mesa.visualization.BarChartModule(
     ]
 )
 
-agent_bar = mesa.visualization.BarChartModule(
-    [{"Label": "Health", "Color": HEALTHY_COLOR}],
-    scope="agent",
-    sorting="ascending",
-    sort_by="Health",
+tree_line_chart = mesa.visualization.ChartModule(
+    [
+        {"Label": "Fine", "Color": HEALTHY_COLOR},
+        {"Label": "On Fire", "Color": SICK_COLOR},
+        {"Label": "Burned Out", "Color": BUILDING_COLOR},
+    ]
 )
+
+# agent_bar = mesa.visualization.BarChartModule(
+#     [{"Label": "Health", "Color": HEALTHY_COLOR}],
+#     scope="agent",
+#     sorting="ascending",
+#     sort_by="Health",
+# )
 
 pie_chart = mesa.visualization.PieChartModule(
     [
@@ -120,7 +133,7 @@ pie_chart = mesa.visualization.PieChartModule(
 # create instance of Mesa ModularServer
 server = mesa.visualization.ModularServer(
     Charts,
-    [canvas_element, line_chart, model_bar, agent_bar, pie_chart],
+    [canvas_element, line_chart, model_bar, pie_chart, tree_line_chart],
     "Mesa Charts",
     model_params=model_params,
 )

@@ -1,19 +1,55 @@
-import imp
 import mesa
 
 from walk import RandomWalker
 
 
 class Building(mesa.Agent):
-    def __init__(self, unique_id: int, pos: tuple, model: mesa.Model) -> None:
+    def __init__(self, unique_id: int, pos: tuple, model: mesa.Model):
         super().__init__(unique_id, model)
         self.pos = pos
 
 
 class Tree(mesa.Agent):
-    def __init__(self, unique_id: int, pos: tuple, model: mesa.Model) -> None:
+    """
+    A tree cell.
+
+    Attributes:
+        x, y: Grid coordinates
+        condition: Can be "Fine", "On Fire", or "Burned Out"
+        unique_id: (x,y) tuple.
+
+    unique_id isn't strictly necessary here, but it's good
+    practice to give one to each agent anyway.
+    """
+
+    def __init__(self, unique_id: int, pos: tuple, model: mesa.Model):
         super().__init__(unique_id, model)
         self.pos = pos
+        self.condition = "Fine"
+        self.fire_turn = 0
+        self.burn_turn = 0
+
+    def step(self):
+        """
+        If the tree is on fire, spread it to fine trees nearby.
+        """
+        if self.condition == "On Fire":
+            for neighbor in self.model.grid.iter_neighbors(self.pos, True):
+                if isinstance(neighbor, Tree) and neighbor.condition == "Fine":
+                    neighbor.condition = "On Fire"
+            self.fire_turn += 1
+
+            if self.fire_turn > 10:
+                self.fire_turn = 0
+                self.condition = "Burned Out"
+
+        if self.condition == "Burned Out":
+            self.burn_turn += 1
+            if self.burn_turn > 10:
+                self.condition = "Fine"
+
+        elif self.random.random() * 100 < 5:
+                self.condition = "On Fire"
 
 
 class Student(RandomWalker):

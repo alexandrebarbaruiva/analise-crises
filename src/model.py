@@ -22,22 +22,48 @@ For details see batch_run.py in the same directory as run.py.
 # Start of datacollector functions
 
 
-def get_num_healthy_agents(model):
-    """return number of healthy agents"""
+def get_num_healthy_students(model):
+    """return number of healthy students"""
 
-    healthy_agents = [
-        a for a in model.schedule.agents if a.health >= model.healthy_threshold
-    ]
-    return len(healthy_agents)
+    healthy_students = 0
+    for agent in model.schedule.agents:
+        if isinstance(agent, Student) and agent.health == 1:
+            healthy_students += 1
+    return healthy_students
 
 
-def get_num_sick_agents(model):
-    """return number of sick agents"""
+def get_num_sick_students(model):
+    """return number of sick students"""
+    sick_students = 0
+    for agent in model.schedule.agents:
+        if isinstance(agent, Student) and agent.health == 0:
+            sick_students += 1
+    return sick_students
 
-    sick_agents = [
-        a for a in model.schedule.agents if a.health < model.healthy_threshold
-    ]
-    return len(sick_agents)
+
+def get_num_tree_fine(model):
+    """return number of trees fine"""
+    trees_fine = 0
+    for agent in model.schedule.agents:
+        if isinstance(agent, Tree) and agent.condition == "Fine":
+            trees_fine += 1
+    return trees_fine
+
+def get_num_tree_on_fire(model):
+    """return number of trees on fire"""
+    trees_on_fire = 0
+    for agent in model.schedule.agents:
+        if isinstance(agent, Tree) and agent.condition == "On Fire":
+            trees_on_fire += 1
+    return trees_on_fire
+
+def get_num_tree_burned_out(model):
+    """return number of trees fine"""
+    trees_burned_out = 0
+    for agent in model.schedule.agents:
+        if isinstance(agent, Tree) and agent.condition == "Burned Out":
+            trees_burned_out += 1
+    return trees_burned_out
 
 
 class Charts(mesa.Model):
@@ -56,7 +82,7 @@ class Charts(mesa.Model):
         width=grid_w,
         init_students=30,
         init_buildings=10,
-        init_trees=20,
+        init_trees=80,
         healthy_threshold=1,
     ):
         self.height = height
@@ -72,20 +98,23 @@ class Charts(mesa.Model):
         # see datacollector functions above
         self.datacollector = mesa.DataCollector(
             model_reporters={
-                "Healthy": get_num_healthy_agents,
-                "Sick": get_num_sick_agents,
+                "Healthy": get_num_healthy_students,
+                "Sick": get_num_sick_students,
+                "Fine": get_num_tree_fine,
+                "On Fire": get_num_tree_on_fire,
+                "Burned Out": get_num_tree_burned_out,
             },
-            agent_reporters={"Health": lambda x: x.health},
+            agent_reporters={"Health": lambda x: x.health if isinstance(x, Student) else 0},
         )
 
         # create a single bank for the model
         # self.bank = Bank(1, self, self.reserve_percent)
-        
         for i in range(self.init_trees):
             x = self.random.randrange(self.width)
             y = self.random.randrange(self.height)
             t = Tree(unique_id=i, pos=(x, y), model=self)
             self.grid.place_agent(t, (x, y))
+            self.schedule.add(t)
 
         # set building positions
         buildings_positions = []
@@ -95,6 +124,7 @@ class Charts(mesa.Model):
             buildings_positions.append((x, y))
             b = Building(unique_id=i, pos=(x, y), model=self)
             self.grid.place_agent(b, (x, y))
+            # self.schedule.add(b)
 
         # create students for the model according to number of students set by user
         for i in range(self.init_students):
@@ -109,7 +139,11 @@ class Charts(mesa.Model):
             health = (
                 0 if ((x, y) in buildings_positions or i == (init_students - 1)) else 1
             )
-            s = Student(unique_id=i, pos=(x, y), model=self, moore=True, health=health)
+            unique_id = i + self.init_trees
+
+            s = Student(
+                unique_id=unique_id, pos=(x, y), model=self, moore=True, health=health
+            )
             # place the Student object on the grid at coordinates (x, y)
             self.grid.place_agent(s, (x, y))
             # add the Student object to the model schedule
@@ -123,6 +157,10 @@ class Charts(mesa.Model):
         self.schedule.step()
         # collect data
         self.datacollector.collect(self)
+
+        # Halt if no more fire and no more sick student
+        if get_num_tree_on_fire(self) == 0 and get_num_sick_students(self) == 0:
+            self.running = False
 
     def run_model(self):
         for i in range(self.run_time):
