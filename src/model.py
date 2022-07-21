@@ -58,7 +58,7 @@ def get_num_tree_on_fire(model):
     return trees_on_fire
 
 def get_num_tree_burned_out(model):
-    """return number of trees fine"""
+    """return number of trees burned out"""
     trees_burned_out = 0
     for agent in model.schedule.agents:
         if isinstance(agent, Tree) and agent.condition == "Burned Out":
